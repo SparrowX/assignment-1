@@ -46,8 +46,20 @@ class CodeAgent(Agent):
         # TODO(Part 1.3): Make the `execute` and `send_message` tools available
         # to the agent.
 
-        # TODO(1.1.b): Construct the system prompt and task_prompt. These
-        # should be usable by the `Agent.build_prompt` method.
+        system_info = {
+            "machine": self.env.machine,
+            "release": self.env.release,
+            "system": self.env.system,
+            "version": self.env.version,
+        }
+        self.system_prompt = (
+            "You are a smart, helpful agent.\n\n"
+            "<system_information>\n"
+            + json.dumps(system_info, indent=2)
+            + "\n</system_information>"
+        )
+
+        # TODO(1.1.b): Construct task_prompt for Agent.build_prompt.
         # TODO(1.4): If any skills are available to the agent, make their
         # descriptions/metadata available to the agent in the prompt.
 
