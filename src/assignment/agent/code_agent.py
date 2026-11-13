@@ -69,10 +69,6 @@ class CodeAgent(Agent):
     ) -> list[dict[str, str]]:
         """Execute ``execute`` and ``send_message`` calls in the code sandbox."""
 
-        schemas = {
-            tool["function"]["name"]: tool["function"]["parameters"]
-            for tool in (EXECUTE_TOOL, SEND_MESSAGE_TOOL)
-        }
         observations = []
         for call in tool_calls:
             try:
@@ -81,9 +77,12 @@ class CodeAgent(Agent):
                 if not isinstance(arguments, dict):
                     raise ValueError("Tool arguments must be a JSON object.")
 
-                if name not in schemas:
+                if name == "execute":
+                    schema = EXECUTE_TOOL["function"]["parameters"]
+                elif name == "send_message":
+                    schema = SEND_MESSAGE_TOOL["function"]["parameters"]
+                else:
                     raise ValueError(f"Unknown tool: {name}")
-                schema = schemas[name]
                 unknown = arguments.keys() - schema.get("properties", {}).keys()
                 missing = set(schema.get("required", [])) - arguments.keys()
                 if schema.get("additionalProperties") is False and unknown:
