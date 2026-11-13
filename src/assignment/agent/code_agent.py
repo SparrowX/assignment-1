@@ -44,6 +44,8 @@ class CodeAgent(Agent):
         self.task = task
         self.submitted_patch = ""
 
+        # TODO(Part 1.3): Make the `execute` and `send_message` tools available
+        # to the agent.
         self.tools.extend([EXECUTE_TOOL, SEND_MESSAGE_TOOL])
 
         system_info = {
