@@ -92,29 +92,10 @@ class CodeAgent(Agent):
                     raise ValueError(f"Missing arguments: {sorted(missing)}")
 
                 if name == "execute":
-                    command = arguments["command"]
-                    if not isinstance(command, str) and not (
-                        isinstance(command, list)
-                        and all(isinstance(part, str) for part in command)
-                    ):
-                        raise ValueError("command must be a string or a list of strings.")
-                    for key, types in (
-                        ("cwd", (str,)),
-                        ("timeout", (int, float)),
-                        ("env", (dict,)),
-                        ("shell", (bool,)),
-                    ):
-                        value = arguments.get(key)
-                        if value is not None and (
-                            not isinstance(value, types)
-                            or (key == "timeout" and isinstance(value, bool))
-                        ):
-                            raise ValueError(f"Invalid type for {key}.")
+                    # Environment expands env before Command validates parameter types.
                     env = arguments.get("env")
-                    if env is not None and not all(
-                        isinstance(value, str) for value in env.values()
-                    ):
-                        raise ValueError("env values must be strings.")
+                    if env is not None and not isinstance(env, dict):
+                        raise ValueError("env must be an object or null.")
                 elif name == "send_message":
                     if not isinstance(arguments["summary"], str):
                         raise ValueError("send_message requires a string summary.")
