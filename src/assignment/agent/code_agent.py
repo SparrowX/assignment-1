@@ -59,7 +59,7 @@ class CodeAgent(Agent):
             + "\n</system_information>"
         )
 
-        # TODO(1.1.b): Construct task_prompt for Agent.build_prompt.
+        self.task_prompt = task
         # TODO(1.4): If any skills are available to the agent, make their
         # descriptions/metadata available to the agent in the prompt.
 
