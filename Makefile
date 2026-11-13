@@ -17,8 +17,10 @@ SWEBENCH_PATCH ?= artifacts/$(INSTANCE).patch
 SWEBENCH_TRAJECTORY ?= artifacts/$(INSTANCE)-trajectory.json
 TRAJECTORY ?= artifacts/part3-trajectory.json
 RESULT ?= artifacts/game-result.json
-MODEL ?= deepseek/deepseek-v4-flash-0731
-DEEPSEEK_MODEL ?= deepseek/deepseek-v4-flash-0731
+# Match the Python runners: environment first, then .env. Command-line MODEL wins.
+# Read only the model setting; do not include .env as executable Make syntax.
+MODEL ?= $(shell .venv/bin/python -c 'import os; from dotenv import dotenv_values; print(os.environ.get("OPENAI_MODEL") or dotenv_values(".env").get("OPENAI_MODEL") or "deepseek/deepseek-v4-flash-0731")')
+DEEPSEEK_MODEL ?= $(MODEL)
 GPT_OSS_MODEL ?= openai/gpt-oss-120b
 MODEL_TAG ?= $(subst /,-,$(MODEL))
 COMPACT_THRESHOLD ?= 6000
