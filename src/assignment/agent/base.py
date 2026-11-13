@@ -218,12 +218,12 @@ class Agent:
         return response.choices[0].message.model_dump(exclude_none=True)
 
     def build_prompt(self) -> list[dict[str, Any]]:
-        """Build a detached message snapshot without changing agent state."""
-        return deepcopy([
+        """Build a new message list; callers should treat history entries as read-only."""
+        return [
             {"role": "system", "content": self.system_prompt},
             {"role": "user", "content": self.task_prompt},
             *self.history,
-        ])
+        ]
 
     def estimate_active_prompt_tokens(self) -> int:
         """Estimate the next prompt, calibrated by the provider's latest usage."""
