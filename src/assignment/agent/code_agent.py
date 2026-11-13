@@ -69,6 +69,10 @@ class CodeAgent(Agent):
     ) -> list[dict[str, str]]:
         """Execute ``execute`` and ``send_message`` calls in the code sandbox."""
 
+        schemas = {
+            tool["function"]["name"]: tool["function"]["parameters"]
+            for tool in (EXECUTE_TOOL, SEND_MESSAGE_TOOL)
+        }
         observations = []
         for call in tool_calls:
             try:
@@ -77,10 +81,17 @@ class CodeAgent(Agent):
                 if not isinstance(arguments, dict):
                     raise ValueError("Tool arguments must be a JSON object.")
 
+                if name not in schemas:
+                    raise ValueError(f"Unknown tool: {name}")
+                schema = schemas[name]
+                unknown = arguments.keys() - schema.get("properties", {}).keys()
+                missing = set(schema.get("required", [])) - arguments.keys()
+                if schema.get("additionalProperties") is False and unknown:
+                    raise ValueError(f"Unknown arguments: {sorted(unknown)}")
+                if missing:
+                    raise ValueError(f"Missing arguments: {sorted(missing)}")
+
                 if name == "execute":
-                    allowed = {"command", "cwd", "timeout", "env", "shell"}
-                    if arguments.keys() - allowed:
-                        raise ValueError("Unsupported execute arguments.")
                     command = arguments["command"]
                     if not isinstance(command, str) and not (
                         isinstance(command, list)
@@ -105,12 +116,8 @@ class CodeAgent(Agent):
                     ):
                         raise ValueError("env values must be strings.")
                 elif name == "send_message":
-                    if set(arguments) != {"summary"} or not isinstance(
-                        arguments["summary"], str
-                    ):
+                    if not isinstance(arguments["summary"], str):
                         raise ValueError("send_message requires a string summary.")
-                else:
-                    raise ValueError(f"Unknown tool: {name}")
             except (KeyError, TypeError, ValueError) as exc:
                 content = f"Tool error: {exc}"
             else:
