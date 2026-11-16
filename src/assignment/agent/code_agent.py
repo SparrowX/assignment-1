@@ -64,9 +64,9 @@ class CodeAgent(Agent):
         # TODO(1.4): If any skills are available to the agent, make their
         # descriptions/metadata available to the agent in the prompt.
         if self.skills:
-            catalog = "\n\n".join(skill["metadata"] for skill in self.skills.values())
+            skill_meta_list = "\n\n".join(skill["metadata"] for skill in self.skills.values())
             self.system_prompt += (
-                "\n\nAvailable skills:\n" + catalog
+                "\n\nAvailable skills:\n" + skill_meta_list
                 + "\n\nUse invoke_skill to read a skill's full instructions."
             )
 
