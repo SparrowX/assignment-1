@@ -1,0 +1,37 @@
+diff --git a/README.md b/README.md
+index 02318e0..1d0900f 100644
+--- a/README.md
++++ b/README.md
+@@ -36,8 +36,9 @@ The browser UI and any programmatic client use the same endpoints:
+ - `GET /health` — readiness check, returns `{"status": "ok"}`.
+ - `GET /api/state` — board state, legal moves, history, and game result.
+ - `POST /api/move` — play a UCI move, for example `{"move": "e2e4"}`. Returns the new state with
+-  `human_move`, `human_state`, and the opponent's `engine_move`. An illegal or malformed move
+-  returns HTTP 400.
++  `human_move`, `human_state`, and the opponent's `engine_move`. A move that ends the game
++  (checkmate, stalemate, or a draw) is reported normally: `game_over` is `true`, `status` names the
++  result, and `engine_move` is `null`. An illegal or malformed move returns HTTP 400.
+ - `POST /api/reset` — start a new game.
+ 
+ ## Layout
+diff --git a/src/chess_app/game.py b/src/chess_app/game.py
+index f153e00..544fbc4 100644
+--- a/src/chess_app/game.py
++++ b/src/chess_app/game.py
+@@ -74,10 +74,13 @@ class ChessGame:
+             self._record_and_push(move)
+             human_state = self._state_unlocked()
+ 
++            # A move that ends the game leaves the engine nothing to answer, so
++            # report the final position as-is instead of searching for a reply.
+             engine_move: str | None = None
+-            reply = self._choose_engine_move()
+-            engine_move = reply.uci()
+-            self._record_and_push(reply)
++            if self._board.outcome(claim_draw=True) is None:
++                reply = self._choose_engine_move()
++                engine_move = reply.uci()
++                self._record_and_push(reply)
+ 
+             state = self._state_unlocked()
+             state["human_move"] = move.uci()
