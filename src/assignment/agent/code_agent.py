@@ -10,7 +10,7 @@ from assignment.agent.base import (
     DEFAULT_COMPACTION_MAX_TOKENS,
     Agent,
 )
-from assignment.agent.tools import EXECUTE_TOOL, SEND_MESSAGE_TOOL
+from assignment.agent.tools import EXECUTE_TOOL, SEND_MESSAGE_TOOL, INVOKE_SKILL_TOOL
 from assignment.env import Environment
 
 class CodeAgent(Agent):
@@ -63,6 +63,12 @@ class CodeAgent(Agent):
         self.task_prompt = task
         # TODO(1.4): If any skills are available to the agent, make their
         # descriptions/metadata available to the agent in the prompt.
+        if self.skills:
+            catalog = "\n\n".join(skill["metadata"] for skill in self.skills.values())
+            self.system_prompt += (
+                "\n\nAvailable skills:\n" + catalog
+                + "\n\nUse invoke_skill to read a skill's full instructions."
+            )
 
     def execute_tool_calls(
         self, tool_calls: list[dict[str, Any]]
@@ -81,6 +87,8 @@ class CodeAgent(Agent):
                     schema = EXECUTE_TOOL["function"]["parameters"]
                 elif name == "send_message":
                     schema = SEND_MESSAGE_TOOL["function"]["parameters"]
+                elif name == "invoke_skill" and self.skills:
+                    schema = INVOKE_SKILL_TOOL["function"]["parameters"]
                 else:
                     raise ValueError(f"Unknown tool: {name}")
                 unknown = arguments.keys() - schema.get("properties", {}).keys()
@@ -98,12 +106,20 @@ class CodeAgent(Agent):
                 elif name == "send_message":
                     if not isinstance(arguments["summary"], str):
                         raise ValueError("send_message requires a string summary.")
+                elif name == "invoke_skill":
+                    skill_name = arguments["name"]
+                    if not isinstance(skill_name, str):
+                        raise ValueError("invoke_skill requires a string name.")
+                    if skill_name not in self.skills:
+                        raise ValueError(f"Unknown skill: {skill_name}")
             except (KeyError, TypeError, ValueError) as exc:
                 content = f"Tool error: {exc}"
             else:
                 # Infrastructure failures propagate; only invalid calls are recoverable here.
                 if name == "execute":
                     content = json.dumps(self.env.execute(**arguments), ensure_ascii=False)
+                elif name == "invoke_skill":
+                    content = self.skills[arguments["name"]]["content"]
                 else:
                     self.finished = True
                     content = f"Submission received: {arguments['summary']}"

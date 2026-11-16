@@ -14,6 +14,7 @@ import os
 from pathlib import Path
 from typing import Any
 
+import yaml
 from dotenv import load_dotenv
 from openai import OpenAI
 
@@ -164,7 +165,46 @@ class Agent:
         # ``content`` of the skill file for ``invoke_skill``. Reject duplicate
         # names and malformed or missing frontmatter with a clear
         # ``ValueError``.
-        raise NotImplementedError
+        skills_path = Path(skills_path)
+        if not skills_path.is_dir():
+            raise ValueError(f"Skills path must be an existing directory: {skills_path}")
+
+        skills = {}
+        for directory in sorted(skills_path.iterdir()):
+            if not directory.is_dir():
+                continue
+            skill_file = directory / "SKILL.md"
+            try:
+                content = skill_file.read_text(encoding="utf-8")
+            except (OSError, UnicodeError) as exc:
+                raise ValueError(f"Cannot read skill file {skill_file}: {exc}") from exc
+            lines = content.splitlines()
+            if not lines or lines[0].strip() != "---":
+                raise ValueError(f"Missing YAML frontmatter in {skill_file}")
+            end = next(
+                (index for index in range(1, len(lines)) if lines[index].strip() == "---"),
+                None,
+            )
+            if end is None:
+                raise ValueError(f"Unclosed YAML frontmatter in {skill_file}")
+            try:
+                metadata = yaml.safe_load("\n".join(lines[1:end]))
+            except yaml.YAMLError as exc:
+                raise ValueError(f"Malformed YAML frontmatter in {skill_file}: {exc}") from exc
+            if not isinstance(metadata, dict):
+                raise ValueError(f"Frontmatter must be a mapping in {skill_file}")
+            for field in ("name", "description"):
+                if not isinstance(metadata.get(field), str) or not metadata[field].strip():
+                    raise ValueError(f"Missing or invalid {field} in {skill_file}")
+            name = metadata["name"].strip()
+            if name in skills:
+                raise ValueError(f"Duplicate skill name {name!r} in {skill_file}")
+            description = " ".join(metadata["description"].split())
+            skills[name] = {
+                "metadata": f"name: {name}\ndescription: {description}",
+                "content": content,
+            }
+        return skills
 
     def query_language_model(self) -> dict[str, Any]:
         """Send one tool-enabled Chat Completions request and normalize it."""
