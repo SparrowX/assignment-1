@@ -67,7 +67,18 @@ def _play_move(client: httpx.Client, arguments: str) -> str:
     # for the agent to address. Cover malformed JSON arguments, arguments
     # that are not an object, a missing or non-string fen, a non-string move,
     # a position or move the server rejects, and a transport failure.
-    raise NotImplementedError
+    try:
+        parameters = json.loads(arguments)
+        if not isinstance(parameters, dict):
+            raise ValueError("Arguments must be a JSON object.")
+        if set(parameters) != {"move"}:
+            raise ValueError("Expected exactly one argument: move.")
+        if not isinstance(parameters["move"], str):
+            raise ValueError("move must be a string in UCI notation.")
+        state = _request_state(client, "POST", "/api/move", json=parameters)
+        return json.dumps(state, ensure_ascii=False)
+    except Exception as exc:
+        return f"<chess_error>{exc}</chess_error>"
 
 
 def _run_python(env: Any, port: int, arguments: str) -> str:

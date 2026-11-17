@@ -107,6 +107,7 @@ class ChessAgent(Agent):
         )
 
         # TODO(Part 3): Register the play_move tool schema from tools.py.
+        self.tools.append(PLAY_MOVE_TOOL)
 
         if programmatic_tools:
             self.tools.append(RUN_PYTHON_TOOL)
@@ -174,7 +175,38 @@ class ChessAgent(Agent):
         # 4. Link every observation to its call with tool_call_id.
         # 5. Turn malformed, unknown, rejected, or extra parallel calls into
         #    recoverable <chess_error> observations instead of crashing.
+        observations = []
+        move_attempted = False
+        registered_names = {tool["function"]["name"] for tool in self.tools}
+        for call in tool_calls:
+            try:
+                name = call["function"]["name"]
+                if name not in registered_names or name != "play_move":
+                    raise ValueError(f"Unknown or unsupported tool: {name}")
+                if self.finished:
+                    raise ValueError("The game is already over; no move was played.")
+                if move_attempted:
+                    raise ValueError(
+                        "Only one play_move call is allowed per batch; "
+                        "choose the next move from the updated board."
+                    )
+                move_attempted = True
+                content = _play_move(
+                    self.chess_client, call["function"]["arguments"]
+                )
+                if not content.startswith("<chess_error>"):
+                    state = json.loads(content)
+                    content = self.format_state(state)
+                    self.last_state = state
+                    self.finished = bool(state.get("game_over"))
+            except Exception as exc:
+                content = f"<chess_error>{exc}</chess_error>"
+            observations.append({
+                "role": "tool",
+                "tool_call_id": call["id"],
+                "content": content,
+            })
 
         # TODO(Part 3.3-4): add cases for simulate_move and run_python, with
         # linked observations and recoverable errors, just like the old tool.
-        raise NotImplementedError
+        return observations
