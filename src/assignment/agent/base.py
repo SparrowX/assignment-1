@@ -229,7 +229,7 @@ class Agent:
                 model=self.model,
                 messages=messages,
                 tools=self.tools,
-                reasoning_effort="medium",
+                extra_body={"thinking": {"type": "disabled"}},
                 max_completion_tokens=4096,
             )
         except Exception as exc:
