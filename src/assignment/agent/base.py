@@ -404,6 +404,12 @@ class Agent:
                         f"Agent did not finish within {self.step_limit} steps."
                     )
 
+                # TODO(2.2) Call `maybe_compact_context()` before each new action
+                # request in your shared loop. It already estimates active tokens
+                # and handles the threshold, and tracks compaction events for
+                # logging.
+                self.maybe_compact_context()
+
                 message = self.query_language_model()
                 self.history.append(message)
 
@@ -411,11 +417,6 @@ class Agent:
                 if tool_calls:
                     observations = self.execute_tool_calls(tool_calls)
                     self.history.extend(observations)
-
-            # TODO(2.2) Call `maybe_compact_context()` before each new action
-            # request in your shared loop. It already estimates active tokens
-            # and handles the threshold, and tracks compaction events for
-            # logging.
 
         finally:
             # This block is provided infrastructure. Do not modify it: a
