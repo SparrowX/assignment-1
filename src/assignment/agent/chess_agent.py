@@ -108,6 +108,7 @@ class ChessAgent(Agent):
 
         # TODO(Part 3): Register the play_move tool schema from tools.py.
         self.tools.append(PLAY_MOVE_TOOL)
+        self.tools.append(SIMULATE_MOVE_TOOL)
 
         if programmatic_tools:
             self.tools.append(RUN_PYTHON_TOOL)
@@ -162,7 +163,7 @@ class ChessAgent(Agent):
     def execute_tool_calls(
         self, tool_calls: list[dict[str, Any]]
     ) -> list[dict[str, str]]:
-        """Execute model-generated ``play_move`` calls against the chess API."""
+        """Execute registered chess tools and return linked observations."""
 
         # TODO(Part 3.1):
         # 1. Dispatch on the function name, and ignore a tool this agent did
@@ -181,24 +182,29 @@ class ChessAgent(Agent):
         for call in tool_calls:
             try:
                 name = call["function"]["name"]
-                if name not in registered_names or name != "play_move":
+                if name not in registered_names or name not in {"play_move", "simulate_move"}:
                     raise ValueError(f"Unknown or unsupported tool: {name}")
-                if self.finished:
-                    raise ValueError("The game is already over; no move was played.")
-                if move_attempted:
-                    raise ValueError(
-                        "Only one play_move call is allowed per batch; "
-                        "choose the next move from the updated board."
+                if name == "simulate_move":
+                    content = _simulate_move(
+                        self.chess_client, call["function"]["arguments"]
                     )
-                move_attempted = True
-                content = _play_move(
-                    self.chess_client, call["function"]["arguments"]
-                )
-                if not content.startswith("<chess_error>"):
-                    state = json.loads(content)
-                    content = self.format_state(state)
-                    self.last_state = state
-                    self.finished = bool(state.get("game_over"))
+                else:
+                    if self.finished:
+                        raise ValueError("The game is already over; no move was played.")
+                    if move_attempted:
+                        raise ValueError(
+                            "Only one play_move call is allowed per batch; "
+                            "choose the next move from the updated board."
+                        )
+                    move_attempted = True
+                    content = _play_move(
+                        self.chess_client, call["function"]["arguments"]
+                    )
+                    if not content.startswith("<chess_error>"):
+                        state = json.loads(content)
+                        content = self.format_state(state)
+                        self.last_state = state
+                        self.finished = bool(state.get("game_over"))
             except Exception as exc:
                 content = f"<chess_error>{exc}</chess_error>"
             observations.append({

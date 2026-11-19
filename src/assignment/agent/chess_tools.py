@@ -52,7 +52,20 @@ def _simulate_move(client: httpx.Client, arguments: str) -> str:
     # JSON arguments, arguments that are not an object, a missing or
     # non-string fen, a non-string move, a position or move the server rejects,
     # and a transport failure.
-    raise NotImplementedError
+    try:
+        parameters = json.loads(arguments)
+        if not isinstance(parameters, dict):
+            raise ValueError("Arguments must be a JSON object.")
+        if set(parameters) - {"fen", "move"}:
+            raise ValueError("Only fen and optional move arguments are accepted.")
+        if not isinstance(parameters.get("fen"), str):
+            raise ValueError("fen must be a string containing a complete six-field FEN.")
+        if parameters.get("move") is not None and not isinstance(parameters["move"], str):
+            raise ValueError("move must be a string in UCI notation.")
+        state = _request_state(client, "POST", "/api/simulate", json=parameters)
+        return json.dumps(state, ensure_ascii=False)
+    except Exception as exc:
+        return f"<chess_error>{exc}</chess_error>"
 
 
 def _play_move(client: httpx.Client, arguments: str) -> str:
