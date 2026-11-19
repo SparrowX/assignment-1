@@ -148,6 +148,8 @@ class ChessAgent(Agent):
             if include_legal_moves
             else "Infer a legal move from the board and FEN, then call play_move."
         )
+        if programmatic_tools and self.skills:
+            opening_instruction += " End the same Python snippet that searches for a move with exactly one call to play_move(best)."
         self.task_prompt = (
             f"Play this game as White. {opening_instruction}\n\n"
             f"{self.format_state(initial_state)}"
