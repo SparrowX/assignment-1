@@ -148,13 +148,6 @@ class ChessAgent(Agent):
             if include_legal_moves
             else "Infer a legal move from the board and FEN, then call play_move."
         )
-        if programmatic_tools and self.skills:
-            opening_instruction = (
-                "Read the move-selection skill first. Follow it in run_python, "
-                "ending each turn's snippet with one play_move(chosen_move). "
-                "For search, simulate_move returns squares (e.g. {'e4': 'P'}), "
-                "turn and in_check for evaluation, and fen for the next simulation."
-            )
         self.task_prompt = (
             f"Play this game as White. {opening_instruction}\n\n"
             f"{self.format_state(initial_state)}"
