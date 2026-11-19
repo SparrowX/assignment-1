@@ -107,8 +107,7 @@ class ChessAgent(Agent):
         )
 
         # TODO(Part 3): Register the play_move tool schema from tools.py.
-        self.tools.append(PLAY_MOVE_TOOL)
-        self.tools.append(SIMULATE_MOVE_TOOL)
+        self.tools.extend([PLAY_MOVE_TOOL, SIMULATE_MOVE_TOOL])
 
         if programmatic_tools:
             self.tools.append(RUN_PYTHON_TOOL)
@@ -182,12 +181,26 @@ class ChessAgent(Agent):
         for call in tool_calls:
             try:
                 name = call["function"]["name"]
-                if name not in registered_names or name not in {"play_move", "simulate_move"}:
+                if name not in registered_names or name not in {
+                    "play_move", "simulate_move", "run_python"
+                }:
                     raise ValueError(f"Unknown or unsupported tool: {name}")
                 if name == "simulate_move":
                     content = _simulate_move(
                         self.chess_client, call["function"]["arguments"]
                     )
+                elif name == "run_python":
+                    content = _run_python(
+                        self.env, self.python_sandbox_port,
+                        call["function"]["arguments"],
+                    )
+                    try:
+                        state = _game_state(self.chess_client)
+                        self.last_state = state
+                        self.finished = bool(state.get("game_over"))
+                        content += "\n\n" + self.format_state(state)
+                    except Exception as exc:
+                        content += f"\n\n<chess_error>Could not refresh live state: {exc}</chess_error>"
                 else:
                     if self.finished:
                         raise ValueError("The game is already over; no move was played.")

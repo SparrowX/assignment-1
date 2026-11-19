@@ -175,4 +175,21 @@ SIMULATE_MOVE_TOOL: dict = {
 }
 
 # TODO()
-RUN_PYTHON_TOOL: dict = {}
+RUN_PYTHON_TOOL: dict = {
+    "type": "function",
+    "function": {
+        "name": "run_python",
+        "description": (
+            "Run Python code in the sandbox with simulate_move(fen, move=None) "
+            "and play_move(move) available. Print results to inspect them. "
+            "Returns stdout, stderr, and error, followed by the live game state."
+        ),
+        "strict": True,
+        "parameters": {
+            "type": "object",
+            "properties": {"code": {"type": "string"}},
+            "required": ["code"],
+            "additionalProperties": False,
+        },
+    },
+}

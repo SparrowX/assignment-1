@@ -9,6 +9,7 @@ from __future__ import annotations
 
 import base64
 import json
+import shlex
 from typing import Any
 
 import httpx
@@ -119,7 +120,26 @@ def _run_python(env: Any, port: int, arguments: str) -> str:
     #
     # Return <chess_error>{message}</chess_error> if there are issues like type
     # mismatches or parsing failures.
-    raise NotImplementedError
+    try:
+        parameters = json.loads(arguments)
+        if not isinstance(parameters, dict) or set(parameters) != {"code"}:
+            raise ValueError("Expected a JSON object with exactly one argument: code.")
+        if not isinstance(parameters["code"], str):
+            raise ValueError("code must be a string.")
+        encoded = base64.b64encode(parameters["code"].encode()).decode("ascii")
+        command = shlex.join([
+            "python", "/opt/assignment/sandbox_python.py", str(port), encoded
+        ])
+        result = env.execute(command)
+        if result["returncode"] != 0:
+            detail = (
+                result.get("exception_info") or result.get("stderr")
+                or result.get("output") or "Sandbox command failed."
+            )
+            return f"<chess_error>{detail}</chess_error>"
+        return result["stdout"] if "stdout" in result else result["output"]
+    except Exception as exc:
+        return f"<chess_error>{exc}</chess_error>"
 
 
 def _invoke_skill(skills: dict[str, dict[str, str]], arguments: str) -> str:
