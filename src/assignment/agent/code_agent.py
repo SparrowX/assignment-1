@@ -9,6 +9,7 @@ from assignment.agent.base import (
     DEFAULT_COMPACTION_KEEP_RECENT_STEPS,
     DEFAULT_COMPACTION_MAX_TOKENS,
     Agent,
+    format_tool_output,
 )
 from assignment.agent.tools import EXECUTE_TOOL, SEND_MESSAGE_TOOL, INVOKE_SKILL_TOOL
 from assignment.env import Environment
@@ -113,7 +114,7 @@ class CodeAgent(Agent):
             else:
                 # Infrastructure failures propagate; only invalid calls are recoverable here.
                 if name == "execute":
-                    content = json.dumps(self.env.execute(**arguments), ensure_ascii=False)
+                    content = format_tool_output(self.env.execute(**arguments))
                 elif name == "send_message":
                     self.finished = True
                     content = f"Submission received: {arguments['summary']}"

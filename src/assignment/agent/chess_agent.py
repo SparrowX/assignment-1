@@ -106,10 +106,10 @@ class ChessAgent(Agent):
         )
 
         # TODO(Part 3): Register the play_move tool schema from tools.py.
-        self.tools.extend([PLAY_MOVE_TOOL, SIMULATE_MOVE_TOOL])
+        self.tools.append(PLAY_MOVE_TOOL)
 
         if programmatic_tools:
-            self.tools.append(RUN_PYTHON_TOOL)
+            self.tools.extend([SIMULATE_MOVE_TOOL, RUN_PYTHON_TOOL])
 
         # run_python always executes in the sandbox, on the port the chess
         # server is listening on there.
