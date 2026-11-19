@@ -147,7 +147,16 @@ def _invoke_skill(skills: dict[str, dict[str, str]], arguments: str) -> str:
     # TODO(3.5): parse the arguments and return the named skill's content.
     # Return <chess_error>{message}</chess_error> if there are issues like type
     # mismatches or parsing failures.
-    raise NotImplementedError
+    # The sandbox imports this module without the local agent package.
+    from assignment.agent.base import Agent
+
+    try:
+        parameters = json.loads(arguments)
+        if not isinstance(parameters, dict):
+            raise ValueError("Tool arguments must be a JSON object.")
+        return Agent.invoke_skill(skills, **parameters)
+    except (TypeError, ValueError) as exc:
+        return f"<chess_error>{exc}</chess_error>"
 
 
 def _game_state(client: httpx.Client, reset: bool = False) -> dict:

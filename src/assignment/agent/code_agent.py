@@ -107,20 +107,14 @@ class CodeAgent(Agent):
                     if not isinstance(arguments["summary"], str):
                         raise ValueError("send_message requires a string summary.")
                 elif name == "invoke_skill":
-                    skill_name = arguments["name"]
-                    if not isinstance(skill_name, str):
-                        raise ValueError("invoke_skill requires a string name.")
-                    if skill_name not in self.skills:
-                        raise ValueError(f"Unknown skill: {skill_name}")
+                    content = self.invoke_skill(self.skills, **arguments)
             except (KeyError, TypeError, ValueError) as exc:
                 content = f"Tool error: {exc}"
             else:
                 # Infrastructure failures propagate; only invalid calls are recoverable here.
                 if name == "execute":
                     content = json.dumps(self.env.execute(**arguments), ensure_ascii=False)
-                elif name == "invoke_skill":
-                    content = self.skills[arguments["name"]]["content"]
-                else:
+                elif name == "send_message":
                     self.finished = True
                     content = f"Submission received: {arguments['summary']}"
 

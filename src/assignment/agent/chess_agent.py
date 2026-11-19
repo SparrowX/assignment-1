@@ -21,7 +21,6 @@ from assignment.agent.chess_tools import (
     _simulate_move,
 )
 from assignment.agent.tools import (
-    INVOKE_SKILL_TOOL,
     PLAY_MOVE_TOOL,
     RUN_PYTHON_TOOL,
     SIMULATE_MOVE_TOOL,
@@ -149,6 +148,13 @@ class ChessAgent(Agent):
             if include_legal_moves
             else "Infer a legal move from the board and FEN, then call play_move."
         )
+        if programmatic_tools and self.skills:
+            opening_instruction = (
+                "Read the move-selection skill first. Follow it in run_python, "
+                "ending each turn's snippet with one play_move(chosen_move). "
+                "For search, simulate_move returns squares (e.g. {'e4': 'P'}), "
+                "turn and in_check for evaluation, and fen for the next simulation."
+            )
         self.task_prompt = (
             f"Play this game as White. {opening_instruction}\n\n"
             f"{self.format_state(initial_state)}"
@@ -181,11 +187,11 @@ class ChessAgent(Agent):
         for call in tool_calls:
             try:
                 name = call["function"]["name"]
-                if name not in registered_names or name not in {
-                    "play_move", "simulate_move", "run_python"
-                }:
+                if name not in registered_names:
                     raise ValueError(f"Unknown or unsupported tool: {name}")
-                if name == "simulate_move":
+                if name == "invoke_skill":
+                    content = _invoke_skill(self.skills, call["function"]["arguments"])
+                elif name == "simulate_move":
                     content = _simulate_move(
                         self.chess_client, call["function"]["arguments"]
                     )
@@ -201,7 +207,7 @@ class ChessAgent(Agent):
                         content += "\n\n" + self.format_state(state)
                     except Exception as exc:
                         content += f"\n\n<chess_error>Could not refresh live state: {exc}</chess_error>"
-                else:
+                elif name == "play_move":
                     if self.finished:
                         raise ValueError("The game is already over; no move was played.")
                     if move_attempted:
@@ -218,6 +224,8 @@ class ChessAgent(Agent):
                         content = self.format_state(state)
                         self.last_state = state
                         self.finished = bool(state.get("game_over"))
+                else:
+                    raise ValueError(f"Unsupported tool: {name}")
             except Exception as exc:
                 content = f"<chess_error>{exc}</chess_error>"
             observations.append({

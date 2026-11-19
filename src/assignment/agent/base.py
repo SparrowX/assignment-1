@@ -214,6 +214,15 @@ class Agent:
             }
         return skills
 
+    @staticmethod
+    def invoke_skill(skills: dict[str, dict[str, str]], /, *, name: str) -> str:
+        """Return the complete instructions from an already loaded skill."""
+        if not isinstance(name, str):
+            raise ValueError("invoke_skill requires a string name.")
+        if name not in skills:
+            raise ValueError(f"Unknown skill: {name}")
+        return skills[name]["content"]
+
     def query_language_model(self) -> dict[str, Any]:
         """Send one tool-enabled Chat Completions request and normalize it."""
 
