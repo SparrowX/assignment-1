@@ -1,0 +1,497 @@
+{
+  "earned": 100,
+  "maximum": 100,
+  "pending": 0,
+  "rows": [
+    {
+      "part": 1,
+      "id": "prompt",
+      "criterion": "Prompt and linked history",
+      "earned": 6,
+      "maximum": 6,
+      "pending": 0,
+      "checks": [
+        {
+          "status": "pass",
+          "earned": 6,
+          "maximum": 6,
+          "evidence": "test_prompt, test_prompt_carries_task_action_and_result, test_long_observation_is_truncated"
+        }
+      ]
+    },
+    {
+      "part": 1,
+      "id": "lifecycle",
+      "criterion": "ReAct lifecycle, cleanup and trajectory",
+      "earned": 6,
+      "maximum": 6,
+      "pending": 0,
+      "checks": [
+        {
+          "status": "pass",
+          "earned": 6,
+          "maximum": 6,
+          "evidence": "test_cleanup_text, test_step_limit_raises"
+        }
+      ]
+    },
+    {
+      "part": 1,
+      "id": "dispatch",
+      "criterion": "Coding tools, recoverable errors and submission",
+      "earned": 6,
+      "maximum": 6,
+      "pending": 0,
+      "checks": [
+        {
+          "status": "pass",
+          "earned": 6,
+          "maximum": 6,
+          "evidence": "test_dispatch, test_dispatch_continues_after_bad_calls, test_malformed_arguments_are_not_executed, test_unknown_tool_is_not_executed"
+        }
+      ]
+    },
+    {
+      "part": 1,
+      "id": "chess_patch",
+      "criterion": "Chess patch replay",
+      "earned": 8,
+      "maximum": 8,
+      "pending": 0,
+      "checks": [
+        {
+          "status": "pass",
+          "earned": 8,
+          "maximum": 8,
+          "evidence": "fresh 4aaabca119: FAIL_TO_PASS 1, PASS_TO_PASS 9"
+        }
+      ]
+    },
+    {
+      "part": 1,
+      "id": "skills",
+      "criterion": "Skill discovery and invocation",
+      "earned": 4,
+      "maximum": 4,
+      "pending": 0,
+      "checks": [
+        {
+          "status": "pass",
+          "earned": 4,
+          "maximum": 4,
+          "evidence": "test_skills, test_skill_catalog_lists_names_without_skill_bodies"
+        }
+      ]
+    },
+    {
+      "part": 2,
+      "id": "trigger",
+      "criterion": "Compaction trigger and generated summary",
+      "earned": 6,
+      "maximum": 6,
+      "pending": 0,
+      "checks": [
+        {
+          "status": "pass",
+          "earned": 3,
+          "maximum": 3,
+          "evidence": "test_summary_trigger"
+        },
+        {
+          "status": "pass",
+          "earned": 3,
+          "maximum": 3,
+          "evidence": "7 compaction events checked"
+        }
+      ]
+    },
+    {
+      "part": 2,
+      "id": "retain",
+      "criterion": "Original instructions and complete recent step",
+      "earned": 6,
+      "maximum": 6,
+      "pending": 0,
+      "checks": [
+        {
+          "status": "pass",
+          "earned": 3,
+          "maximum": 3,
+          "evidence": "test_retention"
+        },
+        {
+          "status": "pass",
+          "earned": 3,
+          "maximum": 3,
+          "evidence": "7 compaction events checked"
+        }
+      ]
+    },
+    {
+      "part": 2,
+      "id": "reduce",
+      "criterion": "Auditable material reduction",
+      "earned": 4,
+      "maximum": 4,
+      "pending": 0,
+      "checks": [
+        {
+          "status": "pass",
+          "earned": 4,
+          "maximum": 4,
+          "evidence": {
+            "actions": 20,
+            "compactions": 7,
+            "action_tokens": 81472,
+            "summary_tokens": 39245,
+            "total_tokens": 120717,
+            "reductions_pct": [
+              13.4,
+              47.7,
+              47.9,
+              77.5,
+              57.0,
+              48.1,
+              70.2
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "part": 2,
+      "id": "tokens",
+      "criterion": "Full-context versus compacted usage report",
+      "earned": 4,
+      "maximum": 4,
+      "pending": 0,
+      "checks": [
+        {
+          "status": "pass",
+          "earned": 4,
+          "maximum": 4,
+          "evidence": {
+            "awarded": 4,
+            "source": "从上一次 DeepSeek 对此版本报告的实际回复转录；补全外层 JSON 的闭合括号。",
+            "report_sha256": "aa4cb75e848739b91cfca256843f7f83ba44a5d1cda9728a29f3192d10f63741",
+            "reason": "数值 2/2：累计用量 196,888 与 120,717、7 次压缩、摘要开销 39,245 和净节省 76,171 均与轨迹吻合。分析 2/2：解释了后续输入缩短，也区分了费用、缓存和耗时，不把单次结果外推到其他任务。费用与缓存等辅助数据没有全部包含在送评指标里。",
+            "judge_model": "deepseek-flash",
+            "criteria": {
+              "numbers": {
+                "score": 2,
+                "reason": "报告的核心 token 数值与给定指标一致：总量 196,888 对 120,717，压缩次数 0 对 7，摘要开销 39,245，压缩后动作 token 81,472；净节省 76,171 与总降幅 38.69% 计算正确。费用、耗时和缓存命中数据不在 replay_metrics 中，无法独立核验，但 token 对比与摘要开销核对完整准确。"
+              },
+              "analysis": {
+                "score": 2,
+                "reason": "报告明确解释摘要请求自身消耗 39,245 tokens，但压缩后后续动作请求不再携带完整历史、末次与峰值 prompt 降低，因而总 token 仍下降；同时讨论费用、时间和缓存命中的权衡，并限定 38.69% 只是两条轨迹的实测差值、时间差不能全部归因于压缩，避免过度外推。费用和缓存等辅助数据无法由给定指标独立核验，但核心机制与 tradeoff 分析完整。"
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "part": 2,
+      "id": "django_patch",
+      "criterion": "SWE-bench patch replay",
+      "earned": 8,
+      "maximum": 8,
+      "pending": 0,
+      "checks": [
+        {
+          "status": "pass",
+          "earned": 8,
+          "maximum": 8,
+          "evidence": {
+            "source": "verified previous replay",
+            "patch_sha256": "0e93636e4ca77e66c698870f0faf9c846fe572fe3735d7cf432335140b459430",
+            "fail_to_pass": 1,
+            "pass_to_pass": 29
+          }
+        }
+      ]
+    },
+    {
+      "part": 3,
+      "id": "schema",
+      "criterion": "play_move schema and registration",
+      "earned": 4,
+      "maximum": 4,
+      "pending": 0,
+      "checks": [
+        {
+          "status": "pass",
+          "earned": 4,
+          "maximum": 4,
+          "evidence": "test_play_move_schema_is_strict_and_registered, test_schema_details"
+        }
+      ]
+    },
+    {
+      "part": 3,
+      "id": "play",
+      "criterion": "play_move updates and recoverable errors",
+      "earned": 6,
+      "maximum": 6,
+      "pending": 0,
+      "checks": [
+        {
+          "status": "pass",
+          "earned": 6,
+          "maximum": 6,
+          "evidence": "test_play_batch, test_play_move_posts_request_and_returns_new_state, test_rejected_and_malformed_moves_are_recoverable"
+        }
+      ]
+    },
+    {
+      "part": 3,
+      "id": "terminal",
+      "criterion": "Basic game reaches a terminal position",
+      "earned": 4,
+      "maximum": 4,
+      "pending": 0,
+      "checks": [
+        {
+          "status": "pass",
+          "earned": 4,
+          "maximum": 4,
+          "evidence": {
+            "model": "deepseek-flash",
+            "calls": 35,
+            "illegal": 1,
+            "other_errors": 0,
+            "invalid_rate": 0.0286,
+            "game_over": true,
+            "plies": 68,
+            "status": "Black wins"
+          }
+        }
+      ]
+    },
+    {
+      "part": 3,
+      "id": "ab",
+      "criterion": "Observation experiment, two models x two conditions",
+      "earned": 4,
+      "maximum": 4,
+      "pending": 0,
+      "checks": [
+        {
+          "status": "pass",
+          "earned": 1,
+          "maximum": 1,
+          "evidence": {
+            "file": "part3-no-legal-moves-flash",
+            "model": "deepseek-flash",
+            "calls": 72,
+            "illegal": 14,
+            "other_errors": 0,
+            "invalid_rate": 0.1944,
+            "game_over": true,
+            "plies": 116,
+            "status": "Black wins"
+          }
+        },
+        {
+          "status": "pass",
+          "earned": 1,
+          "maximum": 1,
+          "evidence": {
+            "file": "part3-legal-moves-flash",
+            "model": "deepseek-flash",
+            "calls": 17,
+            "illegal": 0,
+            "other_errors": 0,
+            "invalid_rate": 0.0,
+            "game_over": true,
+            "plies": 34,
+            "status": "Black wins"
+          }
+        },
+        {
+          "status": "pass",
+          "earned": 1,
+          "maximum": 1,
+          "evidence": {
+            "file": "part3-no-legal-moves-pro",
+            "model": "deepseek-v4-pro",
+            "calls": 21,
+            "illegal": 3,
+            "other_errors": 1,
+            "invalid_rate": 0.1429,
+            "game_over": true,
+            "plies": 34,
+            "status": "Black wins"
+          }
+        },
+        {
+          "status": "pass",
+          "earned": 1,
+          "maximum": 1,
+          "evidence": {
+            "file": "part3-legal-moves-pro",
+            "model": "deepseek-v4-pro",
+            "calls": 58,
+            "illegal": 2,
+            "other_errors": 0,
+            "invalid_rate": 0.0345,
+            "game_over": true,
+            "plies": 112,
+            "status": "Black wins"
+          }
+        }
+      ]
+    },
+    {
+      "part": 3,
+      "id": "observation",
+      "criterion": "Observation experiment report",
+      "earned": 4,
+      "maximum": 4,
+      "pending": 0,
+      "checks": [
+        {
+          "status": "pass",
+          "earned": 2,
+          "maximum": 2,
+          "evidence": [
+            {
+              "false": {
+                "file": "part3-no-legal-moves-flash",
+                "model": "deepseek-flash",
+                "calls": 72,
+                "illegal": 14,
+                "other_errors": 0,
+                "invalid_rate": 0.1944,
+                "game_over": true,
+                "plies": 116,
+                "status": "Black wins"
+              },
+              "true": {
+                "file": "part3-legal-moves-flash",
+                "model": "deepseek-flash",
+                "calls": 17,
+                "illegal": 0,
+                "other_errors": 0,
+                "invalid_rate": 0.0,
+                "game_over": true,
+                "plies": 34,
+                "status": "Black wins"
+              }
+            },
+            {
+              "false": {
+                "file": "part3-no-legal-moves-pro",
+                "model": "deepseek-v4-pro",
+                "calls": 21,
+                "illegal": 3,
+                "other_errors": 1,
+                "invalid_rate": 0.1429,
+                "game_over": true,
+                "plies": 34,
+                "status": "Black wins"
+              },
+              "true": {
+                "file": "part3-legal-moves-pro",
+                "model": "deepseek-v4-pro",
+                "calls": 58,
+                "illegal": 2,
+                "other_errors": 0,
+                "invalid_rate": 0.0345,
+                "game_over": true,
+                "plies": 112,
+                "status": "Black wins"
+              }
+            }
+          ]
+        },
+        {
+          "status": "pass",
+          "earned": 2,
+          "maximum": 2,
+          "evidence": {
+            "awarded": 2,
+            "reason": "报告分别比较了 Flash 和 Pro 在有/无合法走法列表条件下的组内变化，指出 Flash 非法率下降 19.44 个百分点、Pro 下降 10.84 个百分点，并用 Pro 有列表仍提交 e2c4 的例子解释列表不能保证模型遵守；同时说明四组均输、不能据此宣称胜率提高，结论与四局证据一致。",
+            "judge_model": "deepseek-flash"
+          }
+        }
+      ]
+    },
+    {
+      "part": 3,
+      "id": "simulate",
+      "criterion": "Stateless simulation and errors",
+      "earned": 6,
+      "maximum": 6,
+      "pending": 0,
+      "checks": [
+        {
+          "status": "pass",
+          "earned": 3,
+          "maximum": 3,
+          "evidence": "test_simulate_state"
+        },
+        {
+          "status": "pass",
+          "earned": 3,
+          "maximum": 3,
+          "evidence": "test_simulate_errors"
+        }
+      ]
+    },
+    {
+      "part": 3,
+      "id": "python",
+      "criterion": "Sandbox Python execution, refresh and errors",
+      "earned": 6,
+      "maximum": 6,
+      "pending": 0,
+      "checks": [
+        {
+          "status": "pass",
+          "earned": 3,
+          "maximum": 3,
+          "evidence": "test_python_success"
+        },
+        {
+          "status": "pass",
+          "earned": 3,
+          "maximum": 3,
+          "evidence": "test_python_errors"
+        }
+      ]
+    },
+    {
+      "part": 3,
+      "id": "skill_game",
+      "criterion": "Skill, programmatic search and live move",
+      "earned": 6,
+      "maximum": 6,
+      "pending": 0,
+      "checks": [
+        {
+          "status": "pass",
+          "earned": 6,
+          "maximum": 6,
+          "evidence": "step 3: loaded skill, candidate simulation, one play_move site, verified board transition"
+        }
+      ]
+    },
+    {
+      "part": "submission",
+      "id": "archive",
+      "criterion": "Complete parseable submission ZIP",
+      "earned": 2,
+      "maximum": 2,
+      "pending": 0,
+      "checks": [
+        {
+          "status": "pass",
+          "earned": 2,
+          "maximum": 2,
+          "evidence": "validated ZIP layout, allowed paths, required source and 17 parseable artifacts"
+        }
+      ]
+    }
+  ]
+}

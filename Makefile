@@ -109,3 +109,5 @@ run-obs-gpt-oss-legal:
 
 run-chess-modal:
 	uv run assignment-chess-modal --task $(TASK) --sandbox-timeout $(CHESS_TIMEOUT) $(if $(wildcard $(PATCH)),--patch $(PATCH),)
+
+include grading/grader.mk
